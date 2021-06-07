@@ -1,0 +1,6 @@
+bin/*
+obj/*
+!*/.gitkeep
+test/*.out
+test/*.csv
+**/.DS_Store
