@@ -8,7 +8,7 @@ ostream &operator<<(ostream &os, Node const &m) {
   os << m.id << " ->";
   for (int i = 0; i < m.neighbors.size(); i += 1) {
     os << ' ' << m.neighbors[i].nodePtr->id
-       << "(" << m.neighbors[i].fund << ")";
+       << "(" << edges[m.neighbors[i].edgeId].getFund(m.id) << ")";
   }
   return os;
 }

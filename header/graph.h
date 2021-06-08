@@ -6,27 +6,42 @@
 #define FEE_DEFAULT   1
 #define FEE_OPTIMIZED 2
 
-
 using namespace std;
+
+class Edge {
+public:
+  int id1;
+  double fund1;
+  int id2;
+  double fund2;
+  Edge(int, double, int, double);
+  double getFund(int);
+  double getImbalance();
+  double getTotal() { return fund1 + fund2; }
+  void transferFund(int, double, double);
+  int getAnotherId(int);
+};
+
+extern vector<Edge> edges;
 
 class Node {
   friend ostream &operator<<(ostream &, Node const &);
   struct Neighbor {
     Node* nodePtr;
-    double fund;
+    int edgeId;
   };
 
 public:
   int id;
   vector<Neighbor> neighbors;
   void setId(int newId) { id = newId; }
-  void addNeighbor(Node*, double);
+  void addNeighbor(Node*, int);
   
   // Method for routing algorithm
   double accWeight;
-  int fromNode;
-  double fromFee;
-  void setNeighborWeight(double, int);
+  int toEdgeId;
+  double toFee;
+  void setNeighborWeight(double, int, int, double&);
 };
 
 class Graph {
