@@ -35,11 +35,11 @@ double Edge::getImbalance() {
 
 void Edge::transferFund(int fromId, double transfer, double fee) {
   if (fromId == id1) {
-    fund1 += (fee / 2 - transfer);
-    fund2 += (fee / 2 + transfer);
+    fund1 -= (fee + transfer);
+    fund2 += (fee + transfer);
   } else if (fromId == id2) {
-    fund1 += (fee / 2 + transfer);
-    fund2 += (fee / 2 - transfer);
+    fund1 += (fee + transfer);
+    fund2 -= (fee + transfer);
   } else {
     cout << "edge add fund error" << endl;
     exit(1);
@@ -153,6 +153,14 @@ void Node::setNeighborWeight(double transfer, int type, int from, double& reachA
   }
 }
 
+double Graph::getImbalanceRatio() {
+  if (totalImbalance < 0 || totalFund < 0) {
+    cout << "imbalance ratio error!" << endl;
+    exit(1);
+  }
+  return totalImbalance / totalFund;
+}
+
 bool Graph::traverse(int from, int to, double transfer, int type) {
   resetNodesAccWeight();
   _nodes[to].accWeight = 0.0;
@@ -194,7 +202,6 @@ bool Graph::sendPayment(int from, int to, double transfer, int type) {
     int nextId = edges[nPtr->toEdgeId].getAnotherId(nPtr->id);
     nPtr = &_nodes[nextId];
     totalImbalance += (newImbalance - preImbalance);
-    totalFund += fee;
     // cout << " to=" << nPtr->id << " transfer=" << transfer + accFee - fee << " fee=" << fee << endl;
   }
   // cout << " transfer=" << transfer << endl;

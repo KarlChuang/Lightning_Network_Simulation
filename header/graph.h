@@ -57,7 +57,7 @@ public:
   void resetNodesAccWeight();
   bool traverse(int, int, double, int);
   bool sendPayment(int, int, double, int);
-  double getImbalanceRatio() { return totalImbalance / totalFund; }
+  double getImbalanceRatio();
 };
 
 double getFee(double, int, double, double);

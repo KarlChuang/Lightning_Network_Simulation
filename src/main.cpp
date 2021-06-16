@@ -103,7 +103,7 @@ void arrive(void) {
   int to = transfer[4];
   double amount = transfer[5];
   // cout << from << " " << to << endl;
-  if (!ln->sendPayment(from, to, amount, FEE_DEFAULT)) {
+  if (!ln->sendPayment(from, to, amount, FEE_OPTIMIZED)) {
     cout << "No path" << endl;
     // event_schedule(sim_time + 100, EVENT_ARRIVAL);
   }
