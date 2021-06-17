@@ -4,3 +4,4 @@ obj/*
 test/*.out
 test/*.csv
 **/.DS_Store
+dev

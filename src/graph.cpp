@@ -18,7 +18,6 @@ Edge::Edge(int i1, double f1, int i2, double f2) {
 }
 
 double Edge::getFund(int fromId) {
-  // cout << id1 << " " << id2 << endl;
   if (fromId == id1) return fund1;
   else if (fromId == id2) return fund2;
   else {
@@ -90,15 +89,6 @@ Graph::Graph(int num_n, double prob_channel, double min_channel_fund, double max
       }
     }
   }
-
-//   for (int i = 0; i < _nodes[2].neighbors.size(); i += 1) {
-//     cout << edges[_nodes[2].neighbors[i].edgeId].id1 << " " << edges[_nodes[2].neighbors[i].edgeId].id2 << endl;
-//   }
-//   cout << "++++" << endl;
-//   for (int i = 0; i < edges.size(); i += 1) {
-//     cout << edges[i].id1 << "(" << edges[i].fund1 << ") "
-//          << edges[i].id2 << "(" << edges[i].fund2 << ") " << endl;
-//   }
 }
 
 void Graph::resetNodesAccWeight() {
@@ -124,7 +114,6 @@ double getFee(double transfer, int type, double fromFund, double toFund) {
       if (transfer <= (imbalance / 2)) {
         return 0.00000001 + 0.0000000001 * (transfer / 0.00000001);
       } else {
-        int fee_unit = int(transfer / 0.00000001);
         return 0.00000001 + 0.0000000001 * ((imbalance / 2) / 0.00000001)
                + 0.0000000003 * ((transfer - (imbalance / 2)) / 0.00000001);
       }
@@ -138,9 +127,6 @@ void Node::setNeighborWeight(double transfer, int type, int from, double& reachA
   if (id == from) reachAcc = accWeight;
   for (int i = 0; i < neighbors.size(); i += 1) {
     if (accWeight >= neighbors[i].nodePtr->accWeight) continue;
-    // cout << id << " " << neighbors[i].nodePtr->id << endl;
-    // cout << edges[neighbors[i].edgeId].id1 << " " << edges[neighbors[i].edgeId].id2 << endl;
-    // cout << edges[neighbors[i].edgeId].fund1 << " " << edges[neighbors[i].edgeId].fund2 << endl;
     double toFund = edges[neighbors[i].edgeId].getFund(id);
     double fromFund = edges[neighbors[i].edgeId].getFund(neighbors[i].nodePtr->id);
     double fee = getFee(transfer, type, fromFund, toFund);
@@ -171,28 +157,19 @@ bool Graph::traverse(int from, int to, double transfer, int type) {
 }
 
 bool Graph::sendPayment(int from, int to, double transfer, int type) {
-  // for (int i = 0; i < _nodes[from].neighbors.size(); i += 1) {
-  //   cout << _nodes[from].neighbors[i].nodePtr->id << " " << edges[_nodes[from].neighbors[i].edgeId].getFund(from) << endl;
-  // }
-  // cout << "====" << endl;
-  // for (int i = 0; i < _nodes[to].neighbors.size(); i += 1) {
-  //   cout << _nodes[to].neighbors[i].nodePtr->id << " " << edges[_nodes[to].neighbors[i].edgeId].getFund(to) << endl;
-  // }
-  // cout << "====" << endl;
-  
   if (from < 0 || from >= nodeNum || to < 0 || to >= nodeNum) {
     cout << "Send payment node number error" << endl;
     exit(1);
   }
 
+  // find optimal path
   if(!traverse(from, to, transfer, type)) {
-    cout << "No path" << endl;
     return false;
   }
 
+  // set the network state according to optinal path
   Node* nPtr = &_nodes[from];
   while (1) {
-    // cout << "from=" << nPtr->id;
     if (nPtr->toEdgeId < 0) break;
     double accFee = nPtr->accWeight;
     double fee = nPtr->toFee;
@@ -202,8 +179,6 @@ bool Graph::sendPayment(int from, int to, double transfer, int type) {
     int nextId = edges[nPtr->toEdgeId].getAnotherId(nPtr->id);
     nPtr = &_nodes[nextId];
     totalImbalance += (newImbalance - preImbalance);
-    // cout << " to=" << nPtr->id << " transfer=" << transfer + accFee - fee << " fee=" << fee << endl;
   }
-  // cout << " transfer=" << transfer << endl;
   return true;
 }

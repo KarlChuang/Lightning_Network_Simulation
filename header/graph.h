@@ -1,7 +1,9 @@
 #include <iostream>
+#include <fstream>
 #include <sstream>
 #include <vector>
 #include <algorithm>
+#include <string>
 
 #define FEE_DEFAULT   1
 #define FEE_OPTIMIZED 2

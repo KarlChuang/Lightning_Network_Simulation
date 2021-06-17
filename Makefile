@@ -1,4 +1,4 @@
-opts=
+opts=-Wall
 def=
 
 all: main
