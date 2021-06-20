@@ -36,9 +36,17 @@ void Edge::transferFund(int fromId, double transfer, double fee) {
   if (fromId == id1) {
     fund1 -= (fee + transfer);
     fund2 += (fee + transfer);
+    if (fund1 < 0) {
+      cout << "channel fund cannot less than zero" << endl;
+      exit(1);
+    }
   } else if (fromId == id2) {
     fund1 += (fee + transfer);
     fund2 -= (fee + transfer);
+    if (fund2 < 0) {
+      cout << "channel fund cannot less than zero" << endl;
+      exit(1);
+    }
   } else {
     cout << "edge add fund error" << endl;
     exit(1);
@@ -130,6 +138,7 @@ void Node::setNeighborWeight(double transfer, int type, int from, double& reachA
     double toFund = edges[neighbors[i].edgeId].getFund(id);
     double fromFund = edges[neighbors[i].edgeId].getFund(neighbors[i].nodePtr->id);
     double fee = getFee(transfer, type, fromFund, toFund);
+    if (transfer + accWeight + fee > fromFund) continue;
     if (accWeight + fee < neighbors[i].nodePtr->accWeight) {
       neighbors[i].nodePtr->accWeight = accWeight + fee;
       neighbors[i].nodePtr->toEdgeId = neighbors[i].edgeId;

@@ -146,9 +146,17 @@ void generate_payment() {
     from = int(uniform(0.0, float(num_node), STREAM_ROUTE_FROM));
     to = int(uniform(0.0, float(num_node), STREAM_ROUTE_TO));
   }
+  // double amount = normal_distribution(mean_value, std_value, STREAM_NORMAL_1, STREAM_NORMAL_2);
+  // if (amount < 0) {
+  //   int temp = from;
+  //   from = to;
+  //   to = temp;
+  //   amount = -amount;
+  // }
   transfer[3] = from;
   transfer[4] = to;
   transfer[5] = truncated_normal(mean_value, std_value, 0.0, 2.0 * mean_value, STREAM_NORMAL_1, STREAM_NORMAL_2);
+  // transfer[5] = amount;
 }
 
 void arrive(void) {
