@@ -24,18 +24,16 @@ enum STREAM {
 // non-simlib global variables
 int num_node, num_graph, fee_policy;
 Graph* ln[MAX_GRAPH_NUM];
-//     num_machines_busy[MAX_NUM_STATIONS + 1];
 double mean_interarrival, length_simulation, mean_value, std_value;
 int sim_progess;
-int fail_count[MAX_GRAPH_NUM];
 vector<float> time_record;
 vector<float*> imbalance_record;
-//       prob_distrib_station[3][3],
-//       min_service_time[MAX_NUM_STATIONS + 1],
-//       max_service_time[MAX_NUM_STATIONS + 1];
+vector<int*> fail_record;
+
+// file
 FILE *infile;
 ofstream imbalance_csv;
-ofstream statics_csv;
+ofstream fail_csv;
 
 void init(char*);
 void arrive(void);
@@ -80,12 +78,13 @@ int main(int argc, char** argv) {
   }
   for (int i = 0; i < imbalance_record.size(); i += 1) {
     delete [] imbalance_record[i];
+    delete [] fail_record[i];
   }
 
   // close files
   fclose(infile);
   imbalance_csv.close();
-  statics_csv.close();
+  fail_csv.close();
   return 0;
 }
 
@@ -96,15 +95,13 @@ void init(char* input_name) {
   size_t lastindex = infile_name.find_last_of("."); 
   infile_name = infile_name.substr(0, lastindex);
   string outfile_imb = infile_name + "_imbalance.csv";
-  string outfile_stc = infile_name + "_statics.csv";
+  string outfile_stc = infile_name + "_fail.csv";
   imbalance_csv.open(outfile_imb);
-  statics_csv.open(outfile_stc);
+  fail_csv.open(outfile_stc);
 
   // clear parameter
   sim_progess = 0;
-  for (int i = 0; i < MAX_GRAPH_NUM; i += 1) {
-    fail_count[i] = 0;
-  }
+  fail_record.clear();
   time_record.clear();
   imbalance_record.clear();
 
@@ -133,11 +130,14 @@ void init(char* input_name) {
 
   // initial records
   time_record.push_back(0.0);
-  float* record = new float[num_graph];
+  float* im_record = new float[num_graph];
+  int* f_record = new int[num_graph];
   for (int i = 0; i < num_graph; i += 1) {
-    record[i] = ln[i]->getImbalanceRatio();
+    im_record[i] = ln[i]->getImbalanceRatio();
+    f_record[i] = 0;
   }
-  imbalance_record.push_back(record);
+  imbalance_record.push_back(im_record);
+  fail_record.push_back(f_record);
 }
 
 void generate_payment() {
@@ -157,15 +157,19 @@ void arrive(void) {
   double amount = transfer[5];
 
   // every graph deal with same arrival
-  float* record = new float[num_graph];
+  float* im_record = new float[num_graph];
+  int* f_record = new int[num_graph];
   for (int i = 0; i < num_graph; i += 1) {
     if (!ln[i]->sendPayment(from, to, amount, fee_policy)) {
-      fail_count[i] += 1;
+      f_record[i] = fail_record[fail_record.size() - 1][i] + 1;
+    } else {
+      f_record[i] = fail_record[fail_record.size() - 1][i];
     }
-    record[i] = ln[i]->getImbalanceRatio();
+    im_record[i] = ln[i]->getImbalanceRatio();
   }
   time_record.push_back(sim_time);
-  imbalance_record.push_back(record);
+  imbalance_record.push_back(im_record);
+  fail_record.push_back(f_record);
 
   // show the simulation progess
   if (int(sim_time * 100 / length_simulation) != sim_progess) {
@@ -183,20 +187,31 @@ void report(void) {
   imbalance_csv << "time";
   for (int i = 0; i < num_graph; i += 1)
     imbalance_csv << ",graph" << i + 1 << " imbalance ratio";
+  imbalance_csv << ",average";
   for (int i = 0; i < imbalance_record.size(); i += 1) {
     imbalance_csv << "\r\n" << time_record[i];
-    for (int j = 0; j < num_graph; j += 1)
+    float total = 0.0;
+    for (int j = 0; j < num_graph; j += 1) {
       imbalance_csv << "," << imbalance_record[i][j];
+      total += imbalance_record[i][j];
+    }
+    imbalance_csv << "," << total / num_graph;
   }
   imbalance_csv << endl;
 
-  // write statics
-  statics_csv << "graph" << 1 << " fail";
-  for (int i = 1; i < num_graph; i += 1) {
-    statics_csv << ",graph" << i + 1 << " fail";
+  // write fail records
+  fail_csv << "time";
+  for (int i = 0; i < num_graph; i += 1)
+    fail_csv << ",graph" << i + 1 << " fail";
+  fail_csv << ",average";
+  for (int i = 0; i < fail_record.size(); i += 1) {
+    fail_csv << "\r\n" << time_record[i];
+    float total = 0.0;
+    for (int j = 0; j < num_graph; j += 1) {
+      fail_csv << "," << fail_record[i][j];
+      total += fail_record[i][j];
+    }
+    fail_csv << "," << total / num_graph;
   }
-  statics_csv << "\r\n" << fail_count[0];
-  for (int i = 1; i < num_graph; i += 1)
-    statics_csv << "," << fail_count[i];
-  statics_csv << endl;
+  fail_csv << endl;
 }
