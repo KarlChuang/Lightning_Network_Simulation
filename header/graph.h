@@ -35,8 +35,10 @@ class Node {
 
 public:
   int id;
+  int part;
   vector<Neighbor> neighbors;
   void setId(int newId) { id = newId; }
+  void setPart(int partId) { part = partId; }
   void addNeighbor(Node*, int);
   
   // Method for routing algorithm
@@ -44,6 +46,7 @@ public:
   int toEdgeId;
   double toFee;
   void setNeighborWeight(double, int, int, double&);
+  void setNeighborPart();
 };
 
 class Graph {
@@ -58,7 +61,7 @@ public:
   ~Graph() { delete [] _nodes; }
   void resetNodesAccWeight();
   bool traverse(int, int, double, int);
-  bool sendPayment(int, int, double, int);
+  int sendPayment(int, int, double, int);
   double getImbalanceRatio();
 };
 

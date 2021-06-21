@@ -79,6 +79,7 @@ Graph::Graph(int num_n, double prob_channel, double min_channel_fund, double max
   // set node ID
   for (int i = 0; i < nodeNum; i += 1) {
     _nodes[i].setId(i);
+    _nodes[i].setPart(-1);
   }
 
   // set node neightbors and fund
@@ -95,6 +96,16 @@ Graph::Graph(int num_n, double prob_channel, double min_channel_fund, double max
         totalImbalance += ((imbalance > 0) ? imbalance : -imbalance);
         totalFund += (fund1 + fund2);
       }
+    }
+  }
+
+  // set nodes' graph part
+  int graphPart = 0;
+  for (int i = 0; i < nodeNum; i += 1) {
+    if (_nodes[i].part < 0) {
+      _nodes[i].setPart(graphPart);
+      _nodes[i].setNeighborPart();
+      graphPart += 1;
     }
   }
 }
@@ -128,6 +139,15 @@ double getFee(double transfer, int type, double fromFund, double toFund) {
     }
   }
   return double(INT_MAX);
+}
+
+void Node::setNeighborPart() {
+  for (int i = 0; i < neighbors.size(); i += 1) {
+    if (neighbors[i].nodePtr->part != part) {
+      neighbors[i].nodePtr->setPart(part);
+      neighbors[i].nodePtr->setNeighborPart();
+    }
+  }
 }
 
 void Node::setNeighborWeight(double transfer, int type, int from, double& reachAcc) {
@@ -165,15 +185,21 @@ bool Graph::traverse(int from, int to, double transfer, int type) {
   return true; // return can go to the node or not
 }
 
-bool Graph::sendPayment(int from, int to, double transfer, int type) {
+int Graph::sendPayment(int from, int to, double transfer, int type) {
   if (from < 0 || from >= nodeNum || to < 0 || to >= nodeNum) {
     cout << "Send payment node number error" << endl;
     exit(1);
   }
 
+  if (_nodes[from].part != _nodes[to].part) {
+    // no path
+    return 2;
+  }
+
   // find optimal path
   if(!traverse(from, to, transfer, type)) {
-    return false;
+    // no sufficient fund in any link
+    return 1;
   }
 
   // set the network state according to optinal path
@@ -189,5 +215,5 @@ bool Graph::sendPayment(int from, int to, double transfer, int type) {
     nPtr = &_nodes[nextId];
     totalImbalance += (newImbalance - preImbalance);
   }
-  return true;
+  return 0;
 }

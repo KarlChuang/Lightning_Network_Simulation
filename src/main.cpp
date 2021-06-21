@@ -28,7 +28,8 @@ double mean_interarrival, length_simulation, mean_value, std_value;
 int sim_progess;
 vector<float> time_record;
 vector<float*> imbalance_record;
-vector<int*> fail_record;
+vector<int*> fail_record_path;
+vector<int*> fail_record_fund;
 
 // file
 FILE *infile;
@@ -78,7 +79,8 @@ int main(int argc, char** argv) {
   }
   for (int i = 0; i < imbalance_record.size(); i += 1) {
     delete [] imbalance_record[i];
-    delete [] fail_record[i];
+    delete [] fail_record_path[i];
+    delete [] fail_record_fund[i];
   }
 
   // close files
@@ -101,7 +103,8 @@ void init(char* input_name) {
 
   // clear parameter
   sim_progess = 0;
-  fail_record.clear();
+  fail_record_path.clear();
+  fail_record_fund.clear();
   time_record.clear();
   imbalance_record.clear();
 
@@ -131,13 +134,16 @@ void init(char* input_name) {
   // initial records
   time_record.push_back(0.0);
   float* im_record = new float[num_graph];
-  int* f_record = new int[num_graph];
+  int* f_record_p = new int[num_graph];
+  int* f_record_f = new int[num_graph];
   for (int i = 0; i < num_graph; i += 1) {
     im_record[i] = ln[i]->getImbalanceRatio();
-    f_record[i] = 0;
+    f_record_p[i] = 0;
+    f_record_f[i] = 0;
   }
   imbalance_record.push_back(im_record);
-  fail_record.push_back(f_record);
+  fail_record_path.push_back(f_record_p);
+  fail_record_fund.push_back(f_record_f);
 }
 
 void generate_payment() {
@@ -146,17 +152,9 @@ void generate_payment() {
     from = int(uniform(0.0, float(num_node), STREAM_ROUTE_FROM));
     to = int(uniform(0.0, float(num_node), STREAM_ROUTE_TO));
   }
-  // double amount = normal_distribution(mean_value, std_value, STREAM_NORMAL_1, STREAM_NORMAL_2);
-  // if (amount < 0) {
-  //   int temp = from;
-  //   from = to;
-  //   to = temp;
-  //   amount = -amount;
-  // }
   transfer[3] = from;
   transfer[4] = to;
   transfer[5] = truncated_normal(mean_value, std_value, 0.0, 2.0 * mean_value, STREAM_NORMAL_1, STREAM_NORMAL_2);
-  // transfer[5] = amount;
 }
 
 void arrive(void) {
@@ -166,18 +164,26 @@ void arrive(void) {
 
   // every graph deal with same arrival
   float* im_record = new float[num_graph];
-  int* f_record = new int[num_graph];
+  int* f_record_p = new int[num_graph];
+  int* f_record_f = new int[num_graph];
   for (int i = 0; i < num_graph; i += 1) {
-    if (!ln[i]->sendPayment(from, to, amount, fee_policy)) {
-      f_record[i] = fail_record[fail_record.size() - 1][i] + 1;
-    } else {
-      f_record[i] = fail_record[fail_record.size() - 1][i];
+    int send_event = ln[i]->sendPayment(from, to, amount, fee_policy);
+    if (send_event == 1) {
+      f_record_f[i] = fail_record_fund[fail_record_fund.size() - 1][i] + 1;
+      f_record_p[i] = fail_record_path[fail_record_path.size() - 1][i];
+    } else if (send_event == 2) {
+      f_record_f[i] = fail_record_fund[fail_record_fund.size() - 1][i];
+      f_record_p[i] = fail_record_path[fail_record_path.size() - 1][i] + 1;
+    } else if (send_event == 0) {
+      f_record_f[i] = fail_record_fund[fail_record_fund.size() - 1][i];
+      f_record_p[i] = fail_record_path[fail_record_path.size() - 1][i];
     }
     im_record[i] = ln[i]->getImbalanceRatio();
   }
   time_record.push_back(sim_time);
   imbalance_record.push_back(im_record);
-  fail_record.push_back(f_record);
+  fail_record_fund.push_back(f_record_f);
+  fail_record_path.push_back(f_record_p);
 
   // show the simulation progess
   if (int(sim_time * 100 / length_simulation) != sim_progess) {
@@ -210,14 +216,24 @@ void report(void) {
   // write fail records
   fail_csv << "time";
   for (int i = 0; i < num_graph; i += 1)
-    fail_csv << ",graph" << i + 1 << " fail";
+    fail_csv << ",graph" << i + 1 << " path fail";
+  fail_csv << ",average,,time";
+  for (int i = 0; i < num_graph; i += 1)
+    fail_csv << ",graph" << i + 1 << " fund fail";
   fail_csv << ",average";
-  for (int i = 0; i < fail_record.size(); i += 1) {
+  for (int i = 0; i < fail_record_fund.size(); i += 1) {
     fail_csv << "\r\n" << time_record[i];
     float total = 0.0;
     for (int j = 0; j < num_graph; j += 1) {
-      fail_csv << "," << fail_record[i][j];
-      total += fail_record[i][j];
+      fail_csv << "," << fail_record_path[i][j];
+      total += fail_record_path[i][j];
+    }
+    fail_csv << "," << total / num_graph << ",,";
+    fail_csv << time_record[i];
+    total = 0.0;
+    for (int j = 0; j < num_graph; j += 1) {
+      fail_csv << "," << fail_record_fund[i][j];
+      total += fail_record_fund[i][j];
     }
     fail_csv << "," << total / num_graph;
   }
