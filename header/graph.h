@@ -65,6 +65,9 @@ public:
   double getImbalanceRatio();
 };
 
+extern double fee_low;
+extern double fee_high;
+extern double fee_default;
 double getFee(double, int, double, double);
 ostream &operator<<(ostream &, Node const &);
 ostream &operator<<(ostream &, Graph const &);

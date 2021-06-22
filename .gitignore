@@ -2,8 +2,10 @@ bin/*
 obj/*
 !*/.gitkeep
 test/*.out
+test/*.png
 test/*.csv
 test/**/*.out
 test/**/*.csv
+test/**/*.png
 **/.DS_Store
 dev

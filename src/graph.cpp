@@ -123,18 +123,18 @@ double getFee(double transfer, int type, double fromFund, double toFund) {
     return double(INT_MAX);
   }
   if (type == FEE_DEFAULT) {
-    return 0.00000001 + 0.0000000003 * (transfer / 0.00000001);
+    return 0.00000001 + fee_default * (transfer);
   }
   if (type == FEE_OPTIMIZED) {
     if (fromFund <= toFund) {
-      return 0.00000001 + 0.0000000003 * (transfer / 0.00000001);
+      return 0.00000001 + fee_high * (transfer);
     } else {
       double imbalance = fromFund - toFund;
       if (transfer <= (imbalance / 2)) {
-        return 0.00000001 + 0.0000000001 * (transfer / 0.00000001);
+        return 0.00000001 + fee_low * (transfer);
       } else {
-        return 0.00000001 + 0.0000000001 * ((imbalance / 2) / 0.00000001)
-               + 0.0000000003 * ((transfer - (imbalance / 2)) / 0.00000001);
+        return 0.00000001 + fee_low * ((imbalance / 2))
+               + fee_high * (transfer - (imbalance / 2));
       }
     }
   }
@@ -205,7 +205,7 @@ int Graph::sendPayment(int from, int to, double transfer, int type) {
   // set the network state according to optinal path
   Node* nPtr = &_nodes[from];
   while (1) {
-    if (nPtr->toEdgeId < 0) break;
+    if (nPtr->toEdgeId < 0 && nPtr->id == to) break;
     double accFee = nPtr->accWeight;
     double fee = nPtr->toFee;
     double preImbalance = edges[nPtr->toEdgeId].getImbalance();

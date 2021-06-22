@@ -25,6 +25,7 @@ enum STREAM {
 int num_node, num_graph, fee_policy;
 Graph* ln[MAX_GRAPH_NUM];
 double mean_interarrival, length_simulation, mean_value, std_value;
+double fee_low, fee_high, fee_default;
 int sim_progess;
 vector<float> time_record;
 vector<float*> imbalance_record;
@@ -112,7 +113,7 @@ void init(char* input_name) {
   double prob_channel, min_channel_fund, max_channel_fund;
   fscanf(infile, "%d %d %lf %lf", &num_node, &num_graph, &mean_interarrival, &length_simulation);
   fscanf(infile, "%lf %lf %lf %lf %lf", &prob_channel, &min_channel_fund, &max_channel_fund, &mean_value, &std_value);
-  fscanf(infile, "%d", &fee_policy);
+  fscanf(infile, "%d %lf %lf %lf", &fee_policy, &fee_low, &fee_high, &fee_default);
   if(num_node > MAX_NODE_NUM) {
     cout << "\nNode number overflow" << endl;
     exit(1);
@@ -197,6 +198,8 @@ void arrive(void) {
 }
 
 void report(void) {
+  cout << "\r" << 100 << "%    " << endl;
+
   // write imbalance records
   imbalance_csv << "time";
   for (int i = 0; i < num_graph; i += 1)

@@ -21,6 +21,20 @@ obj/%.o: src/%.cpp
 obj/%.o: src/%.cpp header/%.h
 	g++ -I./header $(opts) $(def) -c $< -o $@
 
+test_50-100000:
+	./bin/main ./test/50-100000/default_50.in
+	./bin/main ./test/50-100000/opt_50.in
+	python3.6 ./data_process/merge.py ./test/50-100000
+
+test_%:
+	./bin/main ./test/$*/default_10.in
+	./bin/main ./test/$*/default_20.in
+	./bin/main ./test/$*/default_50.in
+	./bin/main ./test/$*/opt_10.in
+	./bin/main ./test/$*/opt_20.in
+	./bin/main ./test/$*/opt_50.in
+	python3.6 ./data_process/merge.py ./test/$*
+
 clean:
 	@rm -rf ./bin/*
 	@touch ./bin/.gitkeep
