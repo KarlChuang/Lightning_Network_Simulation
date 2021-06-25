@@ -130,6 +130,7 @@ void init(char* input_name) {
   // create graph
   for (int i = 0; i < num_graph; i += 1) {
     ln[i] = new Graph(num_node, prob_channel, min_channel_fund, max_channel_fund, STREAM_CHANNEL, STREAM_FUND);
+    // cout << *ln[i];
   }
 
   // initial records

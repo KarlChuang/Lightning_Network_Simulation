@@ -35,6 +35,15 @@ test_%:
 	./bin/main ./test/$*/opt_50.in
 	python3.6 ./data_process/merge.py ./test/$*
 
+dev: ./bin/main
+	./bin/main ./dev/default_10.in
+	./bin/main ./dev/default_20.in
+	./bin/main ./dev/default_50.in
+	./bin/main ./dev/opt_10.in
+	./bin/main ./dev/opt_20.in
+	./bin/main ./dev/opt_50.in
+	python3.6 ./data_process/merge.py ./dev
+
 clean:
 	@rm -rf ./bin/*
 	@touch ./bin/.gitkeep
